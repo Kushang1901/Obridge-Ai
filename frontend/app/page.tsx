@@ -14,7 +14,8 @@ export default function Home() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/predict", {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+      const res = await fetch(`${apiBaseUrl}/api/v1/predict`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
