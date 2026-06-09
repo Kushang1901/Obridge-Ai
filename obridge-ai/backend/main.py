@@ -33,7 +33,10 @@ def predict(req: StockRequest, x_api_key: str = Header(None)):
     if x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    stock_data = get_stock_data(req.symbol)
+    try:
+        stock_data = get_stock_data(req.symbol)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     analysis = analyze_stock(stock_data)
 

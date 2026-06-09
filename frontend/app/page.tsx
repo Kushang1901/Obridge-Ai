@@ -7,11 +7,14 @@ export default function Home() {
   const [symbol, setSymbol] = useState("");
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const getStock = async () => {
     if (!symbol) return;
 
     setLoading(true);
+    setError("");
+    setData(null);
 
     try {
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -27,9 +30,14 @@ export default function Home() {
       });
 
       const json = await res.json();
-      setData(json);
-    } catch (err) {
+      if (res.ok) {
+        setData(json);
+      } else {
+        setError(json.detail || "An unexpected error occurred.");
+      }
+    } catch (err: any) {
       console.log(err);
+      setError("Failed to connect to the backend server.");
     }
 
     setLoading(false);
@@ -129,9 +137,25 @@ export default function Home() {
               padding: "25px",
               borderRadius: "18px",
               border: "1px solid #e2e8f0",
+              marginBottom: "20px",
             }}
           >
             Fetching live stock intelligence...
+          </div>
+        )}
+
+        {error && (
+          <div
+            style={{
+              background: "#fee2e2",
+              color: "#991b1b",
+              padding: "25px",
+              borderRadius: "18px",
+              border: "1px solid #fca5a5",
+              marginBottom: "20px",
+            }}
+          >
+            {error}
           </div>
         )}
 
