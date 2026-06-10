@@ -1,9 +1,64 @@
 import yfinance as yf
 import requests
 
+def resolve_symbol(query: str) -> str:
+    query = query.strip()
+    if not query:
+        return ""
+        
+    url = f"https://query2.finance.yahoo.com/v1/finance/search?q={query}&newsCount=0"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    try:
+        res = requests.get(url, headers=headers, timeout=5)
+        if res.status_code == 200:
+            quotes = res.json().get("quotes", [])
+            if quotes:
+                # 1. NSE ticker (.NS)
+                for q in quotes:
+                    sym = q.get("symbol", "")
+                    if sym.upper().endswith(".NS"):
+                        return sym.upper()
+                        
+                # 2. BSE ticker (.BO)
+                for q in quotes:
+                    sym = q.get("symbol", "")
+                    if sym.upper().endswith(".BO"):
+                        return sym.upper()
+                        
+                # 3. Exact ticker match
+                for q in quotes:
+                    sym = q.get("symbol", "")
+                    if sym.upper() == query.upper():
+                        return sym.upper()
+                        
+                # 4. First equity quote
+                for q in quotes:
+                    if q.get("quoteType") == "EQUITY":
+                        return q.get("symbol", "").upper()
+                        
+                # 5. First quote
+                return quotes[0].get("symbol", "").upper()
+    except Exception as e:
+        print(f"Error resolving symbol '{query}': {e}")
+        
+    # Default fallback: append .NS if it doesn't already have an exchange suffix
+    if not any(query.upper().endswith(suffix) for suffix in [".NS", ".BO", ".L", ".HK"]):
+        return f"{query.upper()}.NS"
+    return query.upper()
+
+def get_tradingview_symbol(resolved_symbol: str) -> str:
+    resolved_symbol = resolved_symbol.upper()
+    if resolved_symbol.endswith(".NS"):
+        return f"NSE:{resolved_symbol[:-3]}"
+    elif resolved_symbol.endswith(".BO"):
+        return f"BSE:{resolved_symbol[:-3]}"
+    return resolved_symbol
+
 def get_stock_data_fallback(symbol: str):
     # Public Yahoo Chart API endpoint, which does not require cookies/crumbs and is rarely rate-limited
-    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol.upper()}.NS?range=1d&interval=1d"
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol.upper()}?range=1d&interval=1d"
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
@@ -60,7 +115,7 @@ def get_stock_data(symbol: str):
 
     try:
         # Try full yfinance API first to get rich fundamental metrics (PE, EPS, etc.)
-        stock = yf.Ticker(symbol.upper() + ".NS", session=session)
+        stock = yf.Ticker(symbol.upper(), session=session)
         info = stock.info
         
         if not info or not isinstance(info, dict):

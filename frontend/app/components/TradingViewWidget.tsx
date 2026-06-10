@@ -14,10 +14,7 @@ export default function TradingViewWidget({
 
     container.innerHTML = "";
 
-    const cleanSymbol = symbol
-      .replace("NSE:", "")
-      .trim()
-      .toUpperCase();
+    const cleanSymbol = symbol.trim().toUpperCase();
 
     const script = document.createElement("script");
 

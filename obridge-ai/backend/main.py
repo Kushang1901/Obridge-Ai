@@ -2,7 +2,7 @@ from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from stock import get_stock_data
+from stock import get_stock_data, resolve_symbol, get_tradingview_symbol
 from ai import analyze_stock
 
 app = FastAPI()
@@ -34,7 +34,9 @@ def predict(req: StockRequest, x_api_key: str = Header(None)):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     try:
-        stock_data = get_stock_data(req.symbol)
+        resolved = resolve_symbol(req.symbol)
+        stock_data = get_stock_data(resolved)
+        tv_symbol = get_tradingview_symbol(resolved)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -42,6 +44,8 @@ def predict(req: StockRequest, x_api_key: str = Header(None)):
 
     return {
         "symbol": req.symbol,
+        "resolved_symbol": resolved,
+        "tradingview_symbol": tv_symbol,
         "stock_data": stock_data,
         "analysis": analysis,
     }

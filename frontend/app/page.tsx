@@ -203,7 +203,7 @@ export default function Home() {
                       fontSize: "18px",
                     }}
                   >
-                    {symbol.toUpperCase()}
+                    {data.resolved_symbol || symbol.toUpperCase()}
                   </p>
                 </div>
               </div>
@@ -482,12 +482,12 @@ export default function Home() {
               </h2>
 
               <TradingViewWidget
-                symbol={
+                symbol={data.tradingview_symbol || (
                   symbol.toUpperCase().includes("NIFTY") ||
                   symbol.toUpperCase().includes("BANKNIFTY")
                     ? symbol.toUpperCase()
                     : `NSE:${symbol.toUpperCase()}`
-                }
+                )}
               />
             </div>
           </>

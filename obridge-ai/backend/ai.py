@@ -1,8 +1,8 @@
 def analyze_stock(stock_data):
 
-    price = float(stock_data.get("close", 0))
-    high = float(stock_data.get("high", 0))
-    low = float(stock_data.get("low", 0))
+    price = float(stock_data.get("current_price", 0))
+    high = float(stock_data.get("day_high", 0))
+    low = float(stock_data.get("day_low", 0))
 
     if price > (low + high) / 2:
         signal = "BUY"
